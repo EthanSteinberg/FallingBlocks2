@@ -43,16 +43,10 @@ t_RenderClass()
    gElements[4] = 2;
    gElements[5] = 3;
 
-   memset(&trisArray[0][0],0,10 * 20 * sizeof(int));
-   //trisArray[5][6] = 1;
-   //trisArray[6][5] = 1;
-   trisArray[10][5] = 1;
-   trisArray[19][5] = 1;
-   trisArray[5][5] = 1;
-   trisArray[0][5] = 1;
+   memset(&trisArray[0][0],0,10 * 21 * sizeof(int));
 
    corex = 4;
-   corey = 8;
+   corey = 18;
 
    xpieceArray[0] = -1;
    xpieceArray[1] = -1;
@@ -65,6 +59,8 @@ t_RenderClass()
    ypieceArray[3] = -1;
 
    pieceColor = 4;
+
+   score = 0;
 
 }
 
@@ -80,7 +76,10 @@ t_RenderClass()
    void drawPiece();
 
    bool checkValid();
+   void makeStatic();
    
+   void clearRows();
+
    void moveDown();
    void moveLeft();
    void moveRight();
@@ -100,13 +99,19 @@ private:
    int gTriangleVertices[12];
 
    unsigned int textures[2];
-   unsigned long microSeconds;
-   time_t seconds;
+   
+   double lasttime;
+
+   double targettime;
+
    int theWidth;
    int theHeight;
 
+   time_t secondOffset;
 
-   int trisArray[20][10];
+   int trisArray[21][10];
+
+   int score;
 
    //piece data
    int corex;

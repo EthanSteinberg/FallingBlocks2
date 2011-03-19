@@ -11,9 +11,6 @@ public class OpenGLStuff {
 	
 	
 	
-	
-	
-	
     public void init(int width, int height)
     {
     	init(width,height,Handle);

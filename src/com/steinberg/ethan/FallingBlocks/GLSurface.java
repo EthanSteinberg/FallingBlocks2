@@ -30,10 +30,12 @@ public class GLSurface extends GLSurfaceView {
     
     OpenGLStuff ndkGL;
     
-  
+    
     @Override  
     public boolean onTouchEvent(MotionEvent event) {
-         
+        
+    	if ( event.getAction() == MotionEvent.ACTION_UP)
+    	{
     	final float x = event.getX();
     	final float y = event.getY();
     	Log.w(TAG, "The button was pushed " + x + " and " + y);
@@ -43,9 +45,14 @@ public class GLSurface extends GLSurfaceView {
                 public void run() {
                 	
                 	ndkGL.pushed(x, y);
-                }});
+                }});}
             return true;
     }
+    
+    
+    
+
+    
     
     public GLSurface(Context context) {
         super(context);      
@@ -331,6 +338,8 @@ public class GLSurface extends GLSurfaceView {
         	 ndkGL.init(width, height);
         }
 
+        
+        
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         	 ndkGL.createTexts();
         	  

@@ -138,6 +138,30 @@ void t_RenderClass::drawPiece()
 
 void t_RenderClass::drawArray()
 {
+   t_fixed testElem[8];
+
+   testElem[0] = 0;
+   testElem[1] = 0;
+
+   testElem[2] = 0;
+   testElem[3] = 20 * 5;
+
+   testElem[4] = 10 * 5;
+   testElem[5] = 20 * 5;
+
+   testElem[6] = 10 * 5;
+   testElem[7] = 0 * 5;
+
+
+   glDisable(GL_TEXTURE_2D);
+
+   glVertexPointer(2, GL_FIXED, 0, testElem);
+   glDrawArrays(GL_LINE_LOOP,0,4);
+   checkGlError("glVertexAttribPointer");
+
+   glEnable(GL_TEXTURE_2D);
+
+
    std::vector<int> xcords;
    std::vector<int> ycords;
    std::vector<int> colors;

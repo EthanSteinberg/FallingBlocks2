@@ -14,7 +14,7 @@
 #include <android/log.h>
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #define  LOG_TAG    "libgl2jni"
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
@@ -37,8 +37,6 @@ static void checkGlError(const char *op)
 
 bool t_RenderClass::setupGraphics(int w, int h)
 {
-   move(0, 0);
-
    glEnable(GL_TEXTURE_2D);
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -54,14 +52,13 @@ bool t_RenderClass::setupGraphics(int w, int h)
    theWidth = w;
    theHeight = h;
 
-   glOrthox((t_fixed) 0.0,(t_fixed)(100.0) ,(t_fixed) -10.0, (t_fixed)((100.0 *((float)h)/w) -10.0) ,(t_fixed) -5.0, (t_fixed)5.0);
+   glOrthox((t_fixed) -10.0,(t_fixed)(100.0 -10.0) ,(t_fixed) -10.0, (t_fixed)((100.0 *((float)h)/w) -10.0) ,(t_fixed) -5.0, (t_fixed)5.0);
    checkGlError("glViewport");
 
    glEnableClientState(GL_VERTEX_ARRAY);
    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 
-   return true;
 
    timespec ti;
 
@@ -71,8 +68,13 @@ bool t_RenderClass::setupGraphics(int w, int h)
       exit(1);
    }
 
-   microSeconds = ti.tv_nsec;
-   seconds = ti.tv_sec;
+   secondOffset = ti.tv_sec;
+   srand(ti.tv_nsec);
+
+   lasttime = (ti.tv_nsec) * 1.0e-9 + (ti.tv_sec - secondOffset);
+   targettime = (ti.tv_nsec) * 1.0e-9 + (ti.tv_sec - secondOffset);
+
+   return true;
 
 }
 
@@ -80,6 +82,8 @@ void t_RenderClass::renderFrame()
 {
    static int frameNum = 0;
    static char buffer[100];
+   static char scoreBuffer[100];
+   static int lastScore = 0;
 
    glClearColorx((t_fixed) 0.5, (t_fixed)  0.5 , (t_fixed)  0.5 , (t_fixed)  1.0);
    checkGlError("glClearColor");
@@ -90,53 +94,90 @@ void t_RenderClass::renderFrame()
    drawArray();
    drawPiece();
 
+   timespec ti;
+
+   if (clock_gettime(CLOCK_MONOTONIC, &ti) == -1)
+   {
+      LOGE("The gettime failed");
+      exit(1);
+   }
+
+   double curtime = (ti.tv_nsec) * 1.0e-9  + ((ti.tv_sec - secondOffset));
+
+   while (curtime >= targettime)
+   {
+      targettime += .5;
+      moveDown();
+   }
+
+
 
    const int TIMES = 10;
 
    if (frameNum++ %TIMES == 0)
    {
-      timespec ti;
-
-      if (clock_gettime(CLOCK_MONOTONIC, &ti) == -1)
-      {
-         LOGE("The gettime failed");
-         exit(1);
-      }
-
-      float fps = TIMES / (((signed long)ti.tv_nsec - (signed long)microSeconds) * 1.0e-9
-                           + (ti.tv_sec - seconds));
+//      float lastfps = (microSecondsFPS) * 1.0e-9 + secondsFPS;
+      /*
+      float fps = TIMES / (((signed long)ti.tv_nsec - (signed long)microSecondsFPS) * 1.0e-9
+                           + ((ti.tv_sec - secondOffset) - secondsFPS));
          //);
-      microSeconds = ti.tv_nsec;
-      seconds = ti.tv_sec;
+      */
+
+      double fps = TIMES/ (curtime - lasttime);
+
+      lasttime = (ti.tv_nsec) * 1.0e-9 + (ti.tv_sec - secondOffset);
 
       snprintf(buffer, sizeof(buffer), "FPS: %d", (int) fps);
 
    }
 
-   drawText(buffer,0,-10);
+   if (score != lastScore)
+   {
+      lastScore = score;
+
+      snprintf(scoreBuffer,sizeof(scoreBuffer),"Score: %d",score);
+   }
+
+   drawText(buffer,-10,-10);
+   drawText(scoreBuffer,50,-10);
    checkGlError("glDrawArrays");
 }
 
 void t_RenderClass::move(float w, float h)
 {
-   
-   if (w > theWidth/2)
+
+   if (w > theWidth/2 +50)
+   {
       moveRight();
+   }
+
+   else if (w< theWidth/2 -50)
+   {
+      moveLeft();
+   }
+
+   else if (h > theHeight/2 + 50)
+   {
+      rotateRight();
+   }
+
+   else if (h < theHeight/2 -50)
+   {
+      rotateLeft();
+   }
 
    else
-      moveLeft();
+   {
+      moveDown();
+   }
 }
 
 void t_RenderClass::loadTextures()
 {
    glGenTextures(2, textures);
 
-   glBindTexture(GL_TEXTURE_2D, textures[0]);
+   glBindTexture(GL_TEXTURE_2D, textures[1]);
    glActiveTexture(GL_TEXTURE0);
 
-   loadTexture(0, "/mnt/sdcard/try6.png");
-   glBindTexture(GL_TEXTURE_2D, textures[1]);
-
-   loadText(40);
-   glBindTexture(GL_TEXTURE_2D, textures[0]);
+   loadText(20);
 }
